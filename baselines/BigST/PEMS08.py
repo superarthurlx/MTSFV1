@@ -11,40 +11,59 @@ from basicts.scaler import ZScoreScaler
 from basicts.utils import get_regular_settings, load_adj
 
 from .arch import BigST
+# from .runner import BigSTPreprocessRunner
 from .loss import bigst_loss
+
+import pdb
 
 ############################## Hot Parameters ##############################
 # Dataset & Metrics configuration
-DATA_NAME = 'PEMS04'  # Dataset name
+DATA_NAME = 'PEMS08'  # Dataset name
 regular_settings = get_regular_settings(DATA_NAME)
-INPUT_LEN = regular_settings['INPUT_LEN']  # Length of input sequence
-OUTPUT_LEN = regular_settings['OUTPUT_LEN']  # Length of output sequence
+INPUT_LEN = 2016 # regular_settings['INPUT_LEN']  # Length of input sequence
+OUTPUT_LEN = 12 # regular_settings['OUTPUT_LEN']  # Length of output sequence
 TRAIN_VAL_TEST_RATIO = regular_settings['TRAIN_VAL_TEST_RATIO']  # Train/Validation/Test split ratios
 NORM_EACH_CHANNEL = regular_settings['NORM_EACH_CHANNEL'] # Whether to normalize each channel of the data
 RESCALE = regular_settings['RESCALE'] # Whether to rescale the data
 NULL_VAL = regular_settings['NULL_VAL'] # Null value in the data
 # Model architecture and parameters
+PREPROCESSED_FILE = "checkpoints\\BigSTPreprocess\\PEMS08_100_2016_12\\db8308a2c87de35e5f3db6177c5714ff\\BigSTPreprocess_best_val_MAE.pt"
 MODEL_ARCH = BigST
+
 adj_mx, _ = load_adj("datasets/" + DATA_NAME +
                      "/adj_mx.pkl", "doubletransition")
 MODEL_PARAM = {
-    "num_nodes": 307,
-    "seq_num": INPUT_LEN,
-    "in_dim": 3,
-    "out_dim": OUTPUT_LEN, 
-    "hid_dim": 32,
-    "tau" : 0.25,
-    "random_feature_dim": 64,
-    "node_emb_dim": 32,
-    "time_emb_dim": 32,
-    "use_residual": True,
-    "use_bn": True,
-    "use_spatial": True,
-    "use_long": False,
-    "dropout": 0.3,
-    "supports": [torch.tensor(i) for i in adj_mx],
-    "time_of_day_size": 288, 
-    "day_of_week_size": 7,
+    "bigst_args":{
+                "num_nodes": 170,
+                "seq_num": 12, 
+                "in_dim": 3,
+                "out_dim": OUTPUT_LEN, #  源代码固定成12了 
+                "hid_dim": 32,
+                "tau" : 0.25,
+                "random_feature_dim": 64,
+                "node_emb_dim": 32,
+                "time_emb_dim": 32,
+                "use_residual": True,
+                "use_bn": True,
+                "use_long": True,
+                "use_spatial": True,
+                "dropout": 0.3,
+                "supports": [torch.tensor(i) for i in adj_mx],
+                "time_of_day_size": 288, 
+                "day_of_week_size": 7
+    },
+    "preprocess_path": PREPROCESSED_FILE,
+    "preprocess_args":{
+                "num_nodes": 170,
+                "in_dim": 3,
+                "dropout": 0.3,
+                "input_length": 2016,
+                "output_length": 12,
+                "nhid": 32,
+                "tiny_batch_size": 64,
+    }
+
+
 }
 
 NUM_EPOCHS = 100
@@ -55,7 +74,7 @@ CFG = EasyDict()
 CFG.DESCRIPTION = 'An Example Config'
 CFG.GPU_NUM = 1 # Number of GPUs to use (0 for CPU mode)
 # Runner
-CFG.RUNNER = SimpleTimeSeriesForecastingRunner
+CFG.RUNNER = SimpleTimeSeriesForecastingRunner 
 
 ############################## Environment Configuration ##############################
 
@@ -115,7 +134,9 @@ CFG.TRAIN.CKPT_SAVE_DIR = os.path.join(
     MODEL_ARCH.__name__,
     '_'.join([DATA_NAME, str(CFG.TRAIN.NUM_EPOCHS), str(INPUT_LEN), str(OUTPUT_LEN)])
 )
-CFG.TRAIN.LOSS = bigst_loss
+
+
+CFG.TRAIN.LOSS = bigst_loss if MODEL_PARAM['bigst_args']['use_spatial'] else masked_mae
 # Optimizer settings
 CFG.TRAIN.OPTIM = EasyDict()
 CFG.TRAIN.OPTIM.TYPE = "AdamW"
@@ -132,7 +153,7 @@ CFG.TRAIN.LR_SCHEDULER.PARAM = {
 }
 # Train data loader settings
 CFG.TRAIN.DATA = EasyDict()
-CFG.TRAIN.DATA.BATCH_SIZE = 64
+CFG.TRAIN.DATA.BATCH_SIZE = 64 
 CFG.TRAIN.DATA.SHUFFLE = True
 # Gradient clipping settings
 CFG.TRAIN.CLIP_GRAD_PARAM = {
@@ -143,16 +164,15 @@ CFG.TRAIN.CLIP_GRAD_PARAM = {
 CFG.VAL = EasyDict()
 CFG.VAL.INTERVAL = 1
 CFG.VAL.DATA = EasyDict()
-CFG.VAL.DATA.BATCH_SIZE = 64
+CFG.VAL.DATA.BATCH_SIZE = 64 
 
 ############################## Test Configuration ##############################
 CFG.TEST = EasyDict()
 CFG.TEST.INTERVAL = 1
 CFG.TEST.DATA = EasyDict()
-CFG.TEST.DATA.BATCH_SIZE = 64
+CFG.TEST.DATA.BATCH_SIZE = 64 
 
 ############################## Evaluation Configuration ##############################
-
 CFG.EVAL = EasyDict()
 
 # Evaluation parameters
