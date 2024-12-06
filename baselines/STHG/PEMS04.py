@@ -10,20 +10,26 @@ from basicts.runners import SimpleTimeSeriesForecastingRunner
 from basicts.scaler import ZScoreScaler
 from basicts.utils import get_regular_settings, load_adj
 
+<<<<<<<< HEAD:baselines/STHG/PEMS04.py
 from .arch import STHG
 from .runner import STHGRunner
+========
+from .arch import BigSTPreprocess
+from .runner import BigSTPreprocessRunner
+>>>>>>>> b85da4e198a180c714e70cdd299d566e5ba481f9:baselines/BigST/PreprocessPEMS08.py
 
 ############################## Hot Parameters ##############################
 # Dataset & Metrics configuration
-DATA_NAME = 'PEMS04'  # Dataset name
+DATA_NAME = 'PEMS08'  # Dataset name
 regular_settings = get_regular_settings(DATA_NAME)
-INPUT_LEN = regular_settings['INPUT_LEN']  # Length of input sequence
-OUTPUT_LEN = regular_settings['OUTPUT_LEN']  # Length of output sequence
+INPUT_LEN = 2016 
+OUTPUT_LEN = 12
 TRAIN_VAL_TEST_RATIO = regular_settings['TRAIN_VAL_TEST_RATIO']  # Train/Validation/Test split ratios
 NORM_EACH_CHANNEL = regular_settings['NORM_EACH_CHANNEL'] # Whether to normalize each channel of the data
 RESCALE = regular_settings['RESCALE'] # Whether to rescale the data
 NULL_VAL = regular_settings['NULL_VAL'] # Null value in the data
 # Model architecture and parameters
+<<<<<<<< HEAD:baselines/STHG/PEMS04.py
 MODEL_ARCH = STHG
 
 MODEL_PARAM = {
@@ -48,6 +54,20 @@ MODEL_PARAM = {
     "topk": 2,
     # -------Bernstein appro-------
     "use_bern": True
+========
+MODEL_ARCH = BigSTPreprocess
+adj_mx, _ = load_adj("datasets/" + DATA_NAME +
+                     "/adj_mx.pkl", "doubletransition")
+MODEL_PARAM = {
+    "num_nodes": 170,
+    "in_dim": 3,
+    "dropout": 0.3,
+    "input_length": INPUT_LEN,
+    "output_length": OUTPUT_LEN,
+    "nhid": 32,
+    "tiny_batch_size": 64,
+
+>>>>>>>> b85da4e198a180c714e70cdd299d566e5ba481f9:baselines/BigST/PreprocessPEMS08.py
 }
 
 NUM_EPOCHS = 100
@@ -58,7 +78,11 @@ CFG = EasyDict()
 CFG.DESCRIPTION = 'An Example Config'
 CFG.GPU_NUM = 1 # Number of GPUs to use (0 for CPU mode)
 # Runner
+<<<<<<<< HEAD:baselines/STHG/PEMS04.py
 CFG.RUNNER = STHGRunner
+========
+CFG.RUNNER = BigSTPreprocessRunner
+>>>>>>>> b85da4e198a180c714e70cdd299d566e5ba481f9:baselines/BigST/PreprocessPEMS08.py
 
 ############################## Environment Configuration ##############################
 CFG.ENV = EasyDict() # Environment settings. Default: None
@@ -134,7 +158,7 @@ CFG.TRAIN.LR_SCHEDULER.PARAM = {
 }
 # Train data loader settings
 CFG.TRAIN.DATA = EasyDict()
-CFG.TRAIN.DATA.BATCH_SIZE = 64
+CFG.TRAIN.DATA.BATCH_SIZE = 1
 CFG.TRAIN.DATA.SHUFFLE = True
 # Gradient clipping settings
 CFG.TRAIN.CLIP_GRAD_PARAM = {
@@ -145,13 +169,13 @@ CFG.TRAIN.CLIP_GRAD_PARAM = {
 CFG.VAL = EasyDict()
 CFG.VAL.INTERVAL = 1
 CFG.VAL.DATA = EasyDict()
-CFG.VAL.DATA.BATCH_SIZE = 64
+CFG.VAL.DATA.BATCH_SIZE = 1
 
 ############################## Test Configuration ##############################
 CFG.TEST = EasyDict()
 CFG.TEST.INTERVAL = 1
 CFG.TEST.DATA = EasyDict()
-CFG.TEST.DATA.BATCH_SIZE = 64
+CFG.TEST.DATA.BATCH_SIZE = 1
 
 ############################## Evaluation Configuration ##############################
 

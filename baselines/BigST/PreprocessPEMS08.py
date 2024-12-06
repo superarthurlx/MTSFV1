@@ -17,13 +17,15 @@ from .runner import BigSTPreprocessRunner
 # Dataset & Metrics configuration
 DATA_NAME = 'PEMS08'  # Dataset name
 regular_settings = get_regular_settings(DATA_NAME)
-INPUT_LEN = 12 
+
+INPUT_LEN = 2016 
 OUTPUT_LEN = 12
 TRAIN_VAL_TEST_RATIO = regular_settings['TRAIN_VAL_TEST_RATIO']  # Train/Validation/Test split ratios
 NORM_EACH_CHANNEL = regular_settings['NORM_EACH_CHANNEL'] # Whether to normalize each channel of the data
 RESCALE = regular_settings['RESCALE'] # Whether to rescale the data
 NULL_VAL = regular_settings['NULL_VAL'] # Null value in the data
 # Model architecture and parameters
+
 MODEL_ARCH = BigSTPreprocess
 adj_mx, _ = load_adj("datasets/" + DATA_NAME +
                      "/adj_mx.pkl", "doubletransition")
@@ -35,7 +37,6 @@ MODEL_PARAM = {
     "output_length": OUTPUT_LEN,
     "nhid": 32,
     "tiny_batch_size": 64,
-
 }
 
 NUM_EPOCHS = 100
@@ -46,10 +47,10 @@ CFG = EasyDict()
 CFG.DESCRIPTION = 'An Example Config'
 CFG.GPU_NUM = 1 # Number of GPUs to use (0 for CPU mode)
 # Runner
+<<<<<<< HEAD
 CFG.RUNNER = BigSTPreprocessRunner
 
 ############################## Environment Configuration ##############################
-
 CFG.ENV = EasyDict() # Environment settings. Default: None
 CFG.ENV.SEED = 0 # Random seed. Default: None
 
@@ -111,14 +112,14 @@ CFG.TRAIN.LOSS = masked_mae
 CFG.TRAIN.OPTIM = EasyDict()
 CFG.TRAIN.OPTIM.TYPE = "AdamW"
 CFG.TRAIN.OPTIM.PARAM = {
-    "lr": 0.002,
-    "weight_decay": 0.0001,
+    "lr": 0.005,
+    "weight_decay": 0.01,
 }
 # Learning rate scheduler settings
 CFG.TRAIN.LR_SCHEDULER = EasyDict()
 CFG.TRAIN.LR_SCHEDULER.TYPE = "MultiStepLR"
 CFG.TRAIN.LR_SCHEDULER.PARAM = {
-    "milestones": [1, 50],
+    "milestones": [1, 30, 50, 80],
     "gamma": 0.5
 }
 # Train data loader settings
@@ -149,5 +150,4 @@ CFG.EVAL = EasyDict()
 # Evaluation parameters
 CFG.EVAL.HORIZONS = [3, 6, 12] # Prediction horizons for evaluation. Default: []
 CFG.EVAL.USE_GPU = True # Whether to use GPU for evaluation. Default: True
-
 
